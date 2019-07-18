@@ -32,6 +32,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.dynamsoft.barcode.BarcodeReader;
+import com.dynamsoft.barcode.BarcodeReaderException;
 import com.dynamsoft.barcode.EnumBarcodeFormat;
 import com.dynamsoft.barcode.EnumConflictMode;
 import com.dynamsoft.barcode.EnumImagePixelFormat;
@@ -308,7 +309,7 @@ public class MainActivity extends AppCompatActivity {
 		mCache.put("qrcode", "1");
 		mCache.put("pdf417", "1");
 		mCache.put("matrix", "1");
-		mCache.put("aztec", "0");
+		mCache.put("aztec", "1");
 
 		cameraView.addCameraListener(new CameraListener() {
 			@Override
@@ -343,9 +344,9 @@ public class MainActivity extends AppCompatActivity {
 					String str = "";
 					for(int i = 0; i<textResults.length; i++){
 						if(i==0)
-							str = "frameId: " + frameId + "\n\n" + textResults[i].barcodeText;
+							str = "frameId: " + frameId + "\n value: " + textResults[i].barcodeText + " type: " + textResults[i].barcodeFormatString;
 						else
-							str = str + "\n\n" + textResults[i].barcodeText;
+							str = str + "\n value: " + textResults[i].barcodeText + " type: " + textResults[i].barcodeFormatString;
 					}
 					message.obj = str;
 					handler.sendMessage(message);
@@ -445,6 +446,12 @@ public class MainActivity extends AppCompatActivity {
 
 		//noinspection SimplifiableIfStatement
 		if (id == R.id.action_settings) {
+			try {
+				reader.stopFrameDecoding();
+				textView.setText("");
+			} catch (BarcodeReaderException e) {
+				e.printStackTrace();
+			}
 			Intent intent = new Intent(MainActivity.this, SettingActivity.class);
 			intent.putExtra("type", barcodeType);
 			startActivityForResult(intent, 0);
@@ -479,7 +486,7 @@ public class MainActivity extends AppCompatActivity {
 			PublicRuntimeSettings runtimeSettings =  reader.getRuntimeSettings();
 			runtimeSettings.barcodeFormatIds = nBarcodeFormat;
 			reader.updateRuntimeSettings(runtimeSettings);
-
+			reader.startFrameDecoding(10, 10, width, height, stride, EnumImagePixelFormat.IPF_NV21, "");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
