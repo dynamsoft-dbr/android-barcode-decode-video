@@ -34,6 +34,7 @@ import android.widget.TextView;
 import com.dynamsoft.barcode.BarcodeReader;
 import com.dynamsoft.barcode.BarcodeReaderException;
 import com.dynamsoft.barcode.EnumBarcodeFormat;
+import com.dynamsoft.barcode.EnumBarcodeFormat_2;
 import com.dynamsoft.barcode.EnumConflictMode;
 import com.dynamsoft.barcode.EnumImagePixelFormat;
 import com.dynamsoft.barcode.EnumIntermediateResultType;
@@ -212,7 +213,8 @@ public class MainActivity extends AppCompatActivity {
 		try {
 			reader = new BarcodeReader("t0068MgAAACk+J2xLoBi7k6zHS97gWYbrF6DrU2j15DOnnQd8bqMGDJAx2/ccbWJsy83iLnOx5x2x6YWrHiKlRP9BVhdeh70=");
 			PublicRuntimeSettings settings = reader.getRuntimeSettings();
-			settings.intermediateResultTypes = EnumIntermediateResultType.IRT_TYPED_BARCODE_ZONE;
+			settings.barcodeFormatIds = EnumBarcodeFormat.BF_ONED | EnumBarcodeFormat.BF_QR_CODE | EnumBarcodeFormat.BF_DATAMATRIX | EnumBarcodeFormat.BF_PDF417;
+			settings.barcodeFormatIds_2 = 0;
 			reader.updateRuntimeSettings(settings);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -263,6 +265,7 @@ public class MainActivity extends AppCompatActivity {
 		mCache.put("microqr", "0");
 		mCache.put("micropdf417", "0");
 		mCache.put("gs1compositecode", "0");
+		mCache.put("postalcode", "0");
 		cameraView.addCameraListener(new CameraListener() {
 			@Override
 			public void onCameraOpened(CameraOptions options) {
@@ -295,10 +298,19 @@ public class MainActivity extends AppCompatActivity {
 					message.what = 0x02;
 					String str = "";
 					for(int i = 0; i<textResults.length; i++){
-						if(i==0)
-							str = "frameId: " + frameId + "\n value: " + textResults[i].barcodeText + " type: " + textResults[i].barcodeFormatString;
-						else
-							str = str + "\n value: " + textResults[i].barcodeText + " type: " + textResults[i].barcodeFormatString;
+						if(i==0) {
+							if (textResults[i].barcodeFormat != 0) {
+								str = "frameId: " + frameId + "\n value: " + textResults[i].barcodeText + " type: " + textResults[i].barcodeFormatString;
+							} else {
+								str = "frameId: " + frameId + "\n value: " + textResults[i].barcodeText + " type: " + textResults[i].barcodeFormatString_2;
+							}
+						} else {
+							if (textResults[i].barcodeFormat != 0) {
+								str = str + "\n value: " + textResults[i].barcodeText + " type: " + textResults[i].barcodeFormatString;
+							} else {
+								str = str + "\n value: " + textResults[i].barcodeText + " type: " + textResults[i].barcodeFormatString_2;
+							}
+						}
 					}
 					message.obj = str;
 					handler.sendMessage(message);
@@ -418,7 +430,8 @@ public class MainActivity extends AppCompatActivity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		try {
-			int nBarcodeFormat =0;
+			int nBarcodeFormat = 0;
+			int nBarcodeFormat_2 = 0;
 			if (mCache.getAsString("linear").equals("1")) {
 				nBarcodeFormat = nBarcodeFormat|EnumBarcodeFormat.BF_ONED;
 			}
@@ -452,9 +465,13 @@ public class MainActivity extends AppCompatActivity {
 			if (mCache.getAsString("gs1compositecode").equals("1")) {
 				nBarcodeFormat = nBarcodeFormat|EnumBarcodeFormat.BF_GS1_COMPOSITE;
 			}
+			if (mCache.getAsString("postalcode").equals("1")) {
+				nBarcodeFormat_2 = nBarcodeFormat_2 | EnumBarcodeFormat_2.BF2_POSTALCODE;
+			}
 
 			PublicRuntimeSettings runtimeSettings =  reader.getRuntimeSettings();
 			runtimeSettings.barcodeFormatIds = nBarcodeFormat;
+			runtimeSettings.barcodeFormatIds_2 = nBarcodeFormat_2;
 			reader.updateRuntimeSettings(runtimeSettings);
 			reader.startFrameDecoding(10, 10, width, height, stride, EnumImagePixelFormat.IPF_NV21, "");
 		} catch (Exception e) {
