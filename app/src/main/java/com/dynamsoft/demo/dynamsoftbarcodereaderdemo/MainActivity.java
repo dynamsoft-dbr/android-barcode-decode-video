@@ -350,7 +350,14 @@ public class MainActivity extends AppCompatActivity {
 							reader.setErrorCallback(errorCallback, null);
 							reader.setTextResultCallback(textResultCallback, null);
 							reader.setIntermediateResultCallback(intermediateResultCallback, null);
-							reader.startFrameDecoding(10, 10, width, height, stride, EnumImagePixelFormat.IPF_NV21, "");
+							FrameDecodingParameters parameters = reader.initFrameDecodingParameters();
+							parameters.width = width;
+							parameters.height = height;
+							parameters.maxQueueLength = 10;
+							parameters.maxResultQueueLength = 10;
+							parameters.stride = stride;
+							parameters.imagePixelFormat = EnumImagePixelFormat.IPF_NV21;
+							reader.startFrameDecodingEx(parameters, "");
 						} else {
 							//TextResult[] results = reader.decodeBuffer(yuvImage.getYuvData(), width, height, stride, EnumImagePixelFormat.IPF_NV21, "");
 							//PublicRuntimeSettings settings = reader.getRuntimeSettings();
